@@ -93,4 +93,8 @@ app.get('/ads/:adId/discord', async (request, response) => {
     response.status(201).json(ad)
 });
 
-app.listen(3333)
+app.get('/', (req, res) => {
+    res.json({message: 'alive'});
+});
+
+app.listen(process.env.PORT || 3333);
