@@ -98,3 +98,4 @@ app.get('/', (req, res) => {
 });
 
 app.listen(process.env.PORT || 3333);
+console.log('app listenning on port', process.env.PORT || 3333)
