@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node build/server.js",
+    "start": "npx prisma dev && node build/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "prisma generate && tsc",
     "dev": "tsnd --exit-child src/server.ts",
