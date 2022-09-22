@@ -1,1 +1,1 @@
-web: npx prisma migrate; npm run build;
+web: npx prisma migrate dev; npm run build;
