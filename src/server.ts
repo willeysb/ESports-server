@@ -46,6 +46,24 @@ app.post('/games/:gameId/ads', async (request, response) => {
     return response.status(201).json({ad})
 });
 
+app.post('/games', async (request, response) => {
+
+    const body = request.body
+
+    /** 
+     * Validar com ZOD JavaScript 
+     * https://github.com/colinhacks/zod
+    */
+
+    const game = await prisma.game.create({
+        data: {
+            title: body.title,
+            bannerUrl: body.bannerUrl,
+        }
+    })
+    return response.status(201).json({game})
+});
+
 app.get('/games/:gameId/ads', async (request, response) => {
 
     let { gameId } = request.params;
