@@ -111,6 +111,10 @@ app.get('/ads/:adId/discord', async (request, response) => {
     response.status(201).json(ad)
 });
 
+app.get('/authTwitch', (request, response) => {
+    response.status(201).json({token: "r78mn7sfh5ya6ss1z032l7t1cxrsdo", clientId: "ky00qvsu6zbcod8zwqqcbmzt73sq1s"})
+})
+
 app.get('/', (req, res) => {
     res.json({message: 'alive'});
 });
