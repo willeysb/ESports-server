@@ -31,3 +31,10 @@ model Ad {
 
   game Game @relation(fields: [gameId], references: [id])
 }
+
+model OauthToken {
+  token     String   @id
+  clientId  String   @unique
+  createdAt DateTime @default(now())
+  expiresIn BigInt
+}
