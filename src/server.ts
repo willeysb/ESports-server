@@ -137,14 +137,13 @@ app.get('/authTwitch', (request, response) => {
         console.log(prismaResponse)
         axios.get('https://id.twitch.tv/oauth2/validate', getTwitchValidadeAxiosConfig(prismaResponse.token))
         .then(validateResponse => {
-            console.log(validateResponse.data)
             response.status(201).json({token: prismaResponse.token, clientId: validateResponse.data.client_id})
         })
         .catch(async err => {
             if(err.status === 401){
                 await axios.post("https://id.twitch.tv/oauth2/token", getTwitchAxiosConfig())
                 .then(async tokenResponse => {
-                    await prisma.oauthToken.update({
+                    const updatedToken = await prisma.oauthToken.update({
                         data: {
                             token: tokenResponse.data.token,
                             expiresIn: tokenResponse.data.expires_in
@@ -153,6 +152,7 @@ app.get('/authTwitch', (request, response) => {
                             clientId: process.env.TWITCH_CLIENT_ID
                         }
                     })
+                    response.status(201).json({token: updatedToken.token, clientId: updatedToken.clientId})
                 })
             }
         })
@@ -160,13 +160,15 @@ app.get('/authTwitch', (request, response) => {
         await axios.post('https://id.twitch.tv/oauth2/token', getTwitchAxiosConfig())
         .then(async tokenResponse => {
             if(process.env.TWITCH_CLIENT_ID){
-                await prisma.oauthToken.create({
+                const createdToken = await prisma.oauthToken.create({
                     data: {
                         token: tokenResponse.data.token,
                         clientId: process.env.TWITCH_CLIENT_ID,
                         expiresIn: tokenResponse.data.expires_in
                     }
                 })
+                response.status(201).json({token: createdToken.token, clientId: createdToken.clientId})
+                
             }
         })
     })
