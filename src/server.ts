@@ -2,11 +2,25 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client'
 import { convertHourStringToMinutes, convertMinutesToHourString } from './utils/convert-hour-and-minutes';
 import cors from 'cors';
+import axios from 'axios';
 
 const app = express();
 app.use(express.json())
 app.use(cors());
 const prisma = new PrismaClient({log: ['query']});
+
+function getTwitchAxiosConfig(): any {
+    return { headers: {
+        "client_id": `${process.env.TWITCH_CLIENT_ID}`,
+        "client_secret": `${process.env.TWITCH_CLIENT_SECRET}`,
+        "grant_type": "client_credentials"
+    }}
+}
+function getTwitchValidadeAxiosConfig(token: string): any {
+    return {headers: {
+        "Authorization": `OAuth ${token}`
+    }}
+}
 
 app.get('/games', async (request, response) => {
     const games = await prisma.game.findMany({
@@ -110,6 +124,53 @@ app.get('/ads/:adId/discord', async (request, response) => {
     })
     response.status(201).json(ad)
 });
+
+app.get('/authTwitch', (request, response) => {
+    prisma.oauthToken.findFirstOrThrow({
+        where: {
+            clientId: process.env.TWITCH_CLIENT_ID
+        },
+        select: {
+            token: true
+        }
+    }).then((prismaResponse) => {
+        console.log(prismaResponse)
+        axios.get('https://id.twitch.tv/oauth2/validate', getTwitchValidadeAxiosConfig(prismaResponse.token))
+        .then(validateResponse => {
+            console.log(validateResponse.data)
+            response.status(201).json({token: prismaResponse.token, clientId: validateResponse.data.client_id})
+        })
+        .catch(async err => {
+            if(err.status === 401){
+                await axios.post("https://id.twitch.tv/oauth2/token", getTwitchAxiosConfig())
+                .then(async tokenResponse => {
+                    await prisma.oauthToken.update({
+                        data: {
+                            token: tokenResponse.data.token,
+                            expiresIn: tokenResponse.data.expires_in
+                        },
+                        where: {
+                            clientId: process.env.TWITCH_CLIENT_ID
+                        }
+                    })
+                })
+            }
+        })
+    }).catch(async err => {
+        await axios.post('https://id.twitch.tv/oauth2/token', getTwitchAxiosConfig())
+        .then(async tokenResponse => {
+            if(process.env.TWITCH_CLIENT_ID){
+                await prisma.oauthToken.create({
+                    data: {
+                        token: tokenResponse.data.token,
+                        clientId: process.env.TWITCH_CLIENT_ID,
+                        expiresIn: tokenResponse.data.expires_in
+                    }
+                })
+            }
+        })
+    })
+})
 
 app.get('/', (req, res) => {
     res.json({message: 'alive'});
