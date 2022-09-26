@@ -7,7 +7,7 @@ import axios from 'axios';
 const app = express();
 app.use(express.json())
 app.use(cors());
-const prisma = new PrismaClient({log: ['query']});
+const prisma = new PrismaClient();
 
 function getTwitchAxiosConfig(): any {
     return { headers: {
@@ -140,6 +140,7 @@ app.get('/authTwitch', (request, response) => {
             response.status(201).json({token: prismaResponse.token, clientId: validateResponse.data.client_id})
         })
         .catch(async err => {
+            console.log('at validade token',err)
             if(err.status === 401){
                 await axios.post("https://id.twitch.tv/oauth2/token", getTwitchAxiosConfig())
                 .then(async tokenResponse => {
@@ -170,6 +171,8 @@ app.get('/authTwitch', (request, response) => {
                 response.status(201).json({token: createdToken.token, clientId: createdToken.clientId})
                 
             }
+        }).catch(err => {
+            console.log('at create token',err)
         })
     })
 })
